@@ -1,0 +1,6 @@
+.ipynb_checkpoints/
+__pycache__/
+.vscode/
+230106_frozen_metadata.csv.gz
+hetero_graph.bin
+.DS_Store
