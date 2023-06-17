@@ -9,3 +9,4 @@ lotus_aggregated.csv
 molecule_features_dummy.csv
 species_features_dummy.csv
 model/
+data/
