@@ -10,3 +10,6 @@ molecule_features_dummy.csv
 species_features_dummy.csv
 model/
 data/
+graphs/
+okapi_tfidf_weighted_textual_embedding/
+precomputed_word_embedding/
