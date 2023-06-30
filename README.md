@@ -12,13 +12,13 @@ The algorithm implements a link classification task in a graph between nodes `sp
 ## Playing around
 To reproduce the model, the user should first : 
 
-```python
+```bash
 conda create -f environment.yaml
 conda activate stellar_graph
 ```
 
 Then we create a graph of LOTUS and split them into training and testing dataset:
-```python
+```bash
 python graph_creation_train.py
 python graph_creation_test.py
 ```
