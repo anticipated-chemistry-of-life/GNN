@@ -1,16 +1,4 @@
 .ipynb_checkpoints/
 __pycache__/
 .vscode/
-230106_frozen_metadata.csv.gz
-hetero_graph.bin
 .DS_Store
-lotus_DB_as_graph.gml
-lotus_aggregated.csv
-molecule_features_dummy.csv
-species_features_dummy.csv
-model/
-data/
-graphs/
-okapi_tfidf_weighted_textual_embedding/
-precomputed_word_embedding/
-graph/*
