@@ -13,11 +13,11 @@ The algorithm implements a link classification task in a graph between nodes `sp
 To reproduce the model, the user should first : 
 
 ```bash
-conda create -f environment.yaml
+conda env create -f environment.yaml
 conda activate stellar_graph
 ```
 
-Then we create a graph of LOTUS and split them into training and testing dataset:
+Then we create a graph of LOTUS and split them into training and testing dataset (for now 70-30 split):
 ```bash
 python graph_creation_train.py
 python graph_creation_test.py
@@ -33,6 +33,8 @@ g = nx.compose(g_train, g_test)
 ```
 
 ## Performance
-So far we achieve an accuracy of 0.92 on unseen data (with $p<0.5 \rightarrow 0$ (absent) and $p>0.5 \rightarrow 1$ (present) ). 
+The model is split into 2 parts: One that is able to predict unknown molecules in known species and the other that should predict known molecules in unknown species. For now the model has a "true discovery rate" of 0.9 for molecules (unknown) to species (known) and the other has a "true discovery rate" of 0.78 for unknown SPECIES but known MOLECULES.
+
+To improve this I would argue that we should add some edges between similar species (since it is not done yet)
 
 ## 
