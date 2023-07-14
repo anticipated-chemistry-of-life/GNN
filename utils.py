@@ -32,17 +32,25 @@ def check_which_model_to_use(G: nx.DiGraph, data: pd.DataFrame):
 
     # Get set of nodes in the graph for fast lookup
     nodes = set(G.nodes())
-
+    data_copy = data.copy()
+    
     # Create new column 'model' based on whether 'molecule' and 'species' are in nodes
-    data['model'] = data.apply(lambda row: _get_model(row, nodes), axis=1)
+    data_copy['model'] = data_copy.apply(lambda row: _get_model(row, nodes), axis=1)
 
     # Get numpy arrays
-    m_to_s = data[data['model'] == 'm_to_s'][['molecule', 'species']].values
-    s_to_m = data[data['model'] == 's_to_m'][['molecule', 'species']].values
-    both_unknown = data[data['model'] == 'both_unknown'][['molecule', 'species']].values
-    both_known = data[data['model'] == 'both_known'][['molecule', 'species']].values
+    if data.columns[0] == 'molecule':
+        m_to_s = data_copy[data_copy['model'] == 'm_to_s'][['molecule', 'species']].values
+        s_to_m = data_copy[data_copy['model'] == 's_to_m'][['molecule', 'species']].values
+        both_unknown = data_copy[data_copy['model'] == 'both_unknown'][['molecule', 'species']].values
+        both_known = data_copy[data_copy['model'] == 'both_known'][['molecule', 'species']].values
+        
+    else :
+        m_to_s = data_copy[data_copy['model'] == 'm_to_s'][['species', 'molecule']].values
+        s_to_m = data_copy[data_copy['model'] == 's_to_m'][['species', 'molecule']].values
+        both_unknown = data_copy[data_copy['model'] == 'both_unknown'][['species', 'molecule']].values
+        both_known = data_copy[data_copy['model'] == 'both_known'][['species', 'molecule']].values
 
-    return data, m_to_s, s_to_m, both_unknown, both_known
+    return data_copy, m_to_s, s_to_m, both_unknown, both_known
 
 
 def _get_model(row, nodes):
@@ -61,7 +69,7 @@ def add_nodes_to_graph(G: nx.DiGraph, data: pd.DataFrame)-> nx.DiGraph :
     with one column with the species, and the other with the molecules that will be predicted. There must be a
     column name to the input data. 
     '''
-
+    G_copy = G.copy()
     assert len(data.columns) == 3, "Input data must have 3 columns ! Mol, Species, and Model. Something went wrong in the previous steps"
     if data.columns.isnull().any():
         raise ValueError("The input DataFrame has unnamed columns ! Columns should be named.")
@@ -76,14 +84,14 @@ def add_nodes_to_graph(G: nx.DiGraph, data: pd.DataFrame)-> nx.DiGraph :
     second_column_set = set(data.iloc[:, 1])
     
     for name in first_column_set:
-        if name not in G:
-            G.add_node(name, label=data.columns[0])
+        if name not in G_copy:
+            G_copy.add_node(name, label=data.columns[0])
             
     for name in second_column_set:
-        if name not in G:
-            G.add_node(name, label=data.columns[1])
+        if name not in G_copy:
+            G_copy.add_node(name, label=data.columns[1])
     
-    return G
+    return G_copy
 
 
 def nx_to_stellargraph(g: nx.DiGraph,
@@ -91,13 +99,15 @@ def nx_to_stellargraph(g: nx.DiGraph,
                        species_features: pd.core.frame.DataFrame
                        ) -> stellargraph.core.graph.StellarDiGraph:
     
-    if len(g.nodes()) != (len(molecule_features.index) + len(species_features.index)):
+    if set(g.nodes())-set(molecule_features.index)-set(species_features.index) != set():
         raise Exception("Number of nodes does not match number of features ! Please check your graph or your features.")
         
+    mol_feat = molecule_features[molecule_features.index.isin(g.nodes())]
+    species_feat = species_features[species_features.index.isin(g.nodes())]
     G = StellarGraph.from_networkx(
         g,
-        node_features={'species': species_features,
-                       'molecule': molecule_features}
+        node_features={'species': species_feat,
+                       'molecule': mol_feat}
         )
     
     G.check_graph_for_ml()
@@ -111,7 +121,7 @@ def create_flow(graph: stellargraph.core.graph.StellarDiGraph,
                 array: np.ndarray,
                 unknown_node = 'molecule'
                 ):
-    
+    batch_size = []
     #if the first column is the one we want to predict, keep head node types as they are. 
     if data.columns[0] == unknown_node:
         flow = HinSAGELinkGenerator(
@@ -133,7 +143,7 @@ def create_flow(graph: stellargraph.core.graph.StellarDiGraph,
         
     return flow
 
-def _predict(model, flow, iterations=10):
+def _predict(model, flow, iterations=7):
     predictions = []
     for _ in range(iterations):
         predictions.append(model.predict(flow, workers=-1).flatten())
@@ -167,11 +177,11 @@ def predict(graph : nx.DiGraph,
     
     #first check which model should be used for each row
     print("Checking which model should be used for each row...")
-    data, m_to_s, s_to_m, both_unknown, both_known = check_which_model_to_use(graph, data)
+    data_out, m_to_s, s_to_m, both_unknown, both_known = check_which_model_to_use(graph, data)
     
     #the add the missing nodes to the graph
     print("Adding missing nodes to the graph...")
-    graph_with_nodes = add_nodes_to_graph(graph, data)
+    graph_with_nodes = add_nodes_to_graph(graph, data_out)
     
     #convert NetworkX graph to Stellargraph
     print("Converting NetwrokX to Stellargraph...")
@@ -192,6 +202,7 @@ def predict(graph : nx.DiGraph,
         
         print("Predicting mol to species...")
         out_m = _predict(model_m_to_s, flow_m)
+        del flow_m
         
     if s_to_m.size != 0:
         print("Creating species to mol flow...")
@@ -199,20 +210,24 @@ def predict(graph : nx.DiGraph,
         
         print("Predicting species to mol...")
         out_s = _predict(model_s_to_m, flow_s)
+        del flow_s
 
     if both_unknown.size != 0:
         print("Creating 'forward', 'backward' flow for UNKNOWN molecule AND species...")
         flow_m_both_unknown = create_flow(graph_stellar, data, both_unknown, 'molecule')
         flow_s_both_unknown = create_flow(graph_stellar, data, both_unknown, 'species')
         out_both_unknown = _predict_using_both_models(model_m_to_s, model_s_to_m, flow_m_both_unknown, flow_s_both_unknown)
+        del flow_m_both_unknown
+        del flow_s_both_unknown
         
-    if both_unknown.size != 0:
+    if both_known.size != 0:
         print("Creating 'forward', 'backward' flow for KNOWN molecule AND species...")
         flow_m_both_known = create_flow(graph_stellar, data, both_known, 'molecule')
         flow_s_both_known = create_flow(graph_stellar, data, both_known, 'species')
         out_both_known = _predict_using_both_models(model_m_to_s, model_s_to_m, flow_m_both_known, flow_s_both_known)
+        del flow_m_both_known
+        del flow_s_both_known
     
-        
     if data.columns[0] == 'molecule':
         out_df = pd.DataFrame(np.vstack((m_to_s, s_to_m, both_unknown, both_known)),
                               columns=['molecule', 'species'])
@@ -223,4 +238,4 @@ def predict(graph : nx.DiGraph,
     out_df['prob'] = np.concatenate((out_m, out_s, out_both_unknown, out_both_known))
         
     
-    return pd.merge(data, out_df, on=['species', 'molecule'])
+    return pd.merge(data_out, out_df, on=['species', 'molecule'])
