@@ -4,7 +4,7 @@ import csv
 
 df = pd.read_csv("./data/230106_frozen_metadata.csv.gz", low_memory=False)
 
-mol = df.structure_smiles_2D.unique()[:10000]
+mol = df.structure_smiles_2D.unique()[:1000]
 species = df.organism_name.unique()[:1000]
 
 comb = itertools.product(species, mol)
