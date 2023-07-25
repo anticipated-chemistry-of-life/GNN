@@ -39,6 +39,10 @@ df_agg['total_papers_molecule'] = df_agg.groupby(
 df_agg['total_papers_species'] = df_agg.groupby(
     'organism_name')['reference_wikidata'].transform('sum')
 
+#get gbif data
+gbif = pd.read_csv("./data_gbif/GBIF.csv.gz", index_col=0)
+df_agg = df_agg.merge(gbif, on='organism_name')
+
 #get random subset of the database (comment to have the full DB)
 #df_agg_train = df_agg_train.sample(n=100000).reset_index(drop=True)
 
@@ -47,14 +51,12 @@ unique_species_df = df_agg.drop_duplicates(subset=['organism_name'])
 unique_molecules_df = df_agg.drop_duplicates(subset=['structure_smiles_2D'])
 
 # Fetch the corresponding features
-species_features_df = unique_species_df[['organism_taxonomy_01domain',
-                                         'organism_taxonomy_02kingdom',
-                                         'organism_taxonomy_03phylum',
-                                         'organism_taxonomy_04class',
-                                         'organism_taxonomy_05order',
-                                         'organism_taxonomy_06family',
-                                         'organism_taxonomy_07tribe',
-                                         'organism_taxonomy_08genus',
+species_features_df = unique_species_df[['kingdom',
+                                         'phylum',
+                                         'class',
+                                         'order',
+                                         'family',
+                                         'genus',
                                          'organism_name']]
 
 molecule_features_df = unique_molecules_df[['structure_taxonomy_classyfire_01kingdom',
@@ -74,7 +76,7 @@ molecule_features_dummy = encoder_molecule.fit_transform(molecule_features_df)
 species_features_dummy.index = [i for i in unique_species_df['organism_name']]
 molecule_features_dummy.index = [i for i in unique_molecules_df['structure_smiles_2D']]
 
-sample_fraction = 0.2  # 20% for example
+sample_fraction = 0.3  # 30% for example
 df_test = df_agg.sample(frac=sample_fraction, random_state=42)
 df_test.to_csv("./data/lotus_agg_test.csv.gz", compression="gzip")
 df_train = df_agg.drop(df_test.index)
@@ -96,12 +98,12 @@ for i, row in df_train.iterrows():
                            "label")
 
 
-fps = [AllChem.MolFromSmiles(i) for i in unique_molecules_df['structure_smiles_2D']]
-mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=1024) for m in fps]
-mol_dum = [np.array(i) for i in mols]
-mol_dum = pd.DataFrame(mol_dum)
-
-mol_dum.index = [i for i in unique_molecules_df['structure_smiles_2D']]
+#fps = [AllChem.MolFromSmiles(i) for i in unique_molecules_df['structure_smiles_2D']]
+#mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=1024) for m in fps]
+#mol_dum = [np.array(i) for i in mols]
+#mol_dum = pd.DataFrame(mol_dum)
+#
+#mol_dum.index = [i for i in unique_molecules_df['structure_smiles_2D']]
 
 
 nx.write_graphml(g, "./graph/train_graph.gml")
@@ -109,4 +111,4 @@ nx.write_graphml(g, "./graph/train_graph.gml")
 molecule_features_dummy.to_csv("./data/molecule_features.csv.gz", compression="gzip")
 species_features_dummy.to_csv("./data/species_features.csv.gz", compression="gzip")
 df_train.to_csv("./data/lotus_agg_train.csv.gz", compression="gzip")
-mol_dum.to_csv("./data/mol_dummy_rdkit.csv.gz", compression="gzip")
+#mol_dum.to_csv("./data/mol_dummy_rdkit.csv.gz", compression="gzip")
