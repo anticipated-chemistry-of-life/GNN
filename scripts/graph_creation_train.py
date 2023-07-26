@@ -103,12 +103,12 @@ def bit_vec(mol):
     fp = np.zeros((1,))
     DataStructs.ConvertToNumpyArray(mol, fp)
     return fp
-#fps = [AllChem.MolFromSmiles(i) for i in unique_molecules_df['structure_smiles_2D']]
-#mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=1024) for m in fps]
-#mol_dum = [bit_vec(i) for i in mols]
-#mol_dum = pd.DataFrame(mol_dum)
-#
-#mol_dum.index = [i for i in unique_molecules_df['structure_smiles_2D']]
+fps = [AllChem.MolFromSmiles(i) for i in unique_molecules_df['structure_smiles_2D']]
+mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=1024) for m in fps]
+mol_dum = [bit_vec(i) for i in mols]
+mol_dum = pd.DataFrame(mol_dum)
+
+mol_dum.index = [i for i in unique_molecules_df['structure_smiles_2D']]
 
 
 nx.write_graphml(g, "./graph/train_graph.gml")
@@ -116,4 +116,4 @@ nx.write_graphml(g, "./graph/train_graph.gml")
 molecule_features_dummy.to_csv("./data/molecule_features.csv.gz", compression="gzip")
 species_features_dummy.to_csv("./data/species_features.csv.gz", compression="gzip")
 df_train.to_csv("./data/lotus_agg_train.csv.gz", compression="gzip")
-#mol_dum.to_csv("./data/mol_dummy_rdkit.csv.gz", compression="gzip")
+mol_dum.to_csv("./data/mol_dummy_rdkit.csv.gz", compression="gzip")

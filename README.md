@@ -16,14 +16,15 @@ To reproduce the model, the user should first :
 conda env create -f environment.yaml
 conda activate stellar_graph
 ```
-
+We will first parse the LOTUS database and get the taxonomy from GBIF for each species. This will be the species features.
 Then we create a graph of LOTUS and split them into training and testing dataset (for now 70-30 split):
 ```bash
+python gbif_taxo.py
 python graph_creation_train.py
 python graph_creation_test.py
 ```
 
-After grid searching for the best parameters (still in research ), we set the neural network with two hidden layers of 1024 neurons each with activations "elu" and "selu" respectively. The training of the model can be seen in the `HinSAGE_mol_to_species.ipynb` notebook. Testing on unseen data is in `HinSAGE_test.ipynb` notebook
+After grid searching for the best parameters, we set the neural network with two hidden layers of 1024 neurons each with activations "elu" and "selu" respectively. The training of the model can be seen in the `HinSAGE_mol_to_species.ipynb` notebook. Testing on unseen data is in `HinSAGE_test.ipynb` notebook
 
 If we want to recreate the entire LOTUS database as a graph simply run : 
 ```python
@@ -32,9 +33,16 @@ g_test = nx.read_graphml("./graph/test_graph.gml")
 g = nx.compose(g_train, g_test)
 ```
 
+## Training
+Since HinSAGE can only predict one edge type at a time, we created two models. One for predicting **unknown molecules** in **known species** and one for predicting **unknown species** in **known molecules**. 
+
+TODO
+### Molecules to species
+TODO
+### Species to molecules
+TODO
 ## Performance
 The model is split into 2 parts: One that is able to predict unknown molecules in known species and the other that should predict known molecules in unknown species. For now the model has a "true discovery rate" of 0.9 for molecules (unknown) to species (known) and the other has a "true discovery rate" of 0.78 for unknown SPECIES but known MOLECULES.
 
-To improve this I would argue that we should add some edges between similar species (since it is not done yet)
 
 ## 
