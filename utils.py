@@ -184,7 +184,7 @@ def predict(graph : nx.DiGraph,
     graph_with_nodes = add_nodes_to_graph(graph, data_out)
     
     #convert NetworkX graph to Stellargraph
-    print("Converting NetwrokX to Stellargraph...")
+    print("Converting NetworkX to Stellargraph...")
     graph_stellar = nx_to_stellargraph(graph_with_nodes, molecule_features, species_features)
     
     del graph_with_nodes

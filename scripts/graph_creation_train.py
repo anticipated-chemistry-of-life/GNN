@@ -40,8 +40,9 @@ df_agg['total_papers_species'] = df_agg.groupby(
     'organism_name')['reference_wikidata'].transform('sum')
 
 #get gbif data
-gbif = pd.read_csv("./data_gbif/GBIF.csv.gz", index_col=0)
+gbif = pd.read_csv("./data/GBIF.csv.gz", index_col=0)
 df_agg = df_agg.merge(gbif, on='organism_name')
+df_agg = df_agg.dropna(subset='genus').reset_index(drop=True)
 
 #get random subset of the database (comment to have the full DB)
 #df_agg_train = df_agg_train.sample(n=100000).reset_index(drop=True)
@@ -98,9 +99,13 @@ for i, row in df_train.iterrows():
                            "label")
 
 
+def bit_vec(mol):
+    fp = np.zeros((1,))
+    DataStructs.ConvertToNumpyArray(mol, fp)
+    return fp
 #fps = [AllChem.MolFromSmiles(i) for i in unique_molecules_df['structure_smiles_2D']]
 #mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=1024) for m in fps]
-#mol_dum = [np.array(i) for i in mols]
+#mol_dum = [bit_vec(i) for i in mols]
 #mol_dum = pd.DataFrame(mol_dum)
 #
 #mol_dum.index = [i for i in unique_molecules_df['structure_smiles_2D']]

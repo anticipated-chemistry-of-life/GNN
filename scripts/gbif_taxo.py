@@ -37,4 +37,4 @@ for i in df_agg.organism_name.unique():
     
 gbif = pd.DataFrame.from_records(ls)
 gbif['organism_name'] = df_agg.organism_name.unique()
-gbif.to_csv("./data_gbif/GBIF.csv.gz", compression="gzip")
+gbif.to_csv("./data/GBIF.csv.gz", compression="gzip")
