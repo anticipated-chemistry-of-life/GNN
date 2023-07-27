@@ -9,6 +9,19 @@ dependencies:
   - asttokens=2.2.1
   - async-lru=2.0.3
   - attrs=23.1.0
+  - aws-c-auth=0.7.0
+  - aws-c-cal=0.6.0
+  - aws-c-common=0.8.23
+  - aws-c-compression=0.2.17
+  - aws-c-event-stream=0.3.1
+  - aws-c-http=0.7.11
+  - aws-c-io=0.13.28
+  - aws-c-mqtt=0.8.14
+  - aws-c-s3=0.3.13
+  - aws-c-sdkutils=0.1.11
+  - aws-checksums=0.1.16
+  - aws-crt-cpp=0.20.3
+  - aws-sdk-cpp=1.10.57
   - babel=2.12.1
   - backcall=0.2.0
   - backports=1.0
@@ -21,11 +34,14 @@ dependencies:
   - brotli-bin=1.0.9
   - brotli-python=1.0.9
   - bzip2=1.0.8
-  - ca-certificates=2023.5.7
+  - c-ares=1.19.1
+  - ca-certificates=2023.7.22
   - cairo=1.16.0
   - category_encoders=2.6.1
+  - certifi=2023.7.22
   - cffi=1.15.1
   - charset-normalizer=3.2.0
+  - colorama=0.4.6
   - comm=0.1.3
   - contourpy=1.1.0
   - cycler=0.11.0
@@ -47,6 +63,8 @@ dependencies:
   - freetype=2.12.1
   - freetype-py=2.3.0
   - gettext=0.21.1
+  - gflags=2.2.2
+  - glog=0.6.0
   - greenlet=2.0.2
   - icu=72.1
   - idna=3.4
@@ -70,32 +88,50 @@ dependencies:
   - jupyterlab_pygments=0.2.2
   - jupyterlab_server=2.23.0
   - kiwisolver=1.4.4
+  - krb5=1.21.1
   - lcms2=2.15
   - lerc=4.0.0
+  - libabseil=20230125.3
+  - libarrow=12.0.1
   - libblas=3.9.0
   - libbrotlicommon=1.0.9
   - libbrotlidec=1.0.9
   - libbrotlienc=1.0.9
   - libcblas=3.9.0
+  - libcrc32c=1.1.2
+  - libcurl=8.1.2
   - libcxx=16.0.6
   - libdeflate=1.18
+  - libedit=3.1.20191231
+  - libev=4.33
+  - libevent=2.1.12
   - libexpat=2.5.0
   - libffi=3.4.2
   - libgfortran=5.0.0
   - libgfortran5=12.2.0
   - libglib=2.76.4
+  - libgoogle-cloud=2.12.0
+  - libgrpc=1.56.2
   - libiconv=1.17
   - libjpeg-turbo=2.1.5.1
   - liblapack=3.9.0
+  - libllvm14=14.0.6
+  - libnghttp2=1.52.0
   - libopenblas=0.3.23
   - libpng=1.6.39
+  - libprotobuf=4.23.3
   - libsodium=1.0.18
   - libsqlite=3.42.0
+  - libssh2=1.11.0
+  - libthrift=0.18.1
   - libtiff=4.5.1
+  - libutf8proc=2.8.0
   - libwebp-base=1.3.1
   - libxcb=1.15
   - libzlib=1.2.13
   - llvm-openmp=16.0.6
+  - llvmlite=0.40.1
+  - lz4-c=1.9.4
   - markupsafe=2.1.3
   - matplotlib-base=3.7.2
   - matplotlib-inline=0.1.6
@@ -107,8 +143,10 @@ dependencies:
   - ncurses=6.4
   - nest-asyncio=1.5.6
   - notebook-shim=0.2.3
+  - numba=0.57.1
   - openjpeg=2.5.0
   - openssl=3.1.1
+  - orc=1.9.0
   - overrides=7.3.1
   - packaging=23.1
   - pandas=2.0.3
@@ -131,9 +169,11 @@ dependencies:
   - pthread-stubs=0.4
   - ptyprocess=0.7.0
   - pure_eval=0.2.2
+  - pyarrow=12.0.1
   - pycairo=1.24.0
   - pycparser=2.21
   - pygments=2.15.1
+  - pynndescent=0.5.10
   - pyobjc-core=9.2
   - pyobjc-framework-cocoa=9.2
   - pyparsing=3.0.9
@@ -148,6 +188,7 @@ dependencies:
   - pyyaml=6.0
   - pyzmq=25.1.0
   - rdkit=2023.03.2
+  - re2=2023.03.02
   - readline=8.2
   - referencing=0.29.1
   - reportlab=4.0.4
@@ -158,24 +199,30 @@ dependencies:
   - rpds-py=0.8.10
   - scikit-learn=1.3.0
   - scipy=1.11.1
+  - seaborn=0.12.2
+  - seaborn-base=0.12.2
   - send2trash=1.8.2
   - setuptools=68.0.0
   - six=1.16.0
+  - snappy=1.1.10
   - sniffio=1.3.0
   - soupsieve=2.3.2.post1
   - sqlalchemy=2.0.18
   - stack_data=0.6.2
   - statsmodels=0.14.0
+  - tbb=2021.9.0
   - terminado=0.17.1
   - threadpoolctl=3.1.0
   - tinycss2=1.2.1
   - tk=8.6.12
   - tomli=2.0.1
   - tornado=6.3.2
+  - tqdm=4.65.0
   - traitlets=5.9.0
   - typing_extensions=4.7.1
   - typing_utils=0.1.0
   - tzdata=2023c
+  - umap-learn=0.5.3
   - wcwidth=0.2.6
   - webencodings=0.5.1
   - websocket-client=1.6.1
@@ -190,12 +237,17 @@ dependencies:
   - zstd=1.5.2
   - pip:
       - absl-py==1.4.0
+      - appdirs==1.4.4
       - astunparse==1.6.3
       - cachetools==5.3.1
-      - certifi==2023.5.7
+      - cattrs==23.1.2
+      - click==8.1.6
+      - dendropy==4.6.1
       - flatbuffers==23.5.26
       - fonttools==4.40.0
       - gast==0.4.0
+      - geojson-rewind==1.0.3
+      - geomet==1.0.0
       - google-auth==2.22.0
       - google-auth-oauthlib==1.0.0
       - google-pasta==0.2.0
@@ -208,10 +260,13 @@ dependencies:
       - networkx==3.1
       - numpy==1.24.3
       - oauthlib==3.2.2
+      - opentree==1.0.1
       - opt-einsum==3.3.0
       - protobuf==4.23.4
       - pyasn1==0.5.0
       - pyasn1-modules==0.3.0
+      - pygbif==0.6.3
+      - requests-cache==1.1.0
       - requests-oauthlib==1.3.1
       - rsa==4.9
       - stellargraph-mvisani==1.3.0b0
@@ -222,7 +277,8 @@ dependencies:
       - tensorflow-io-gcs-filesystem==0.32.0
       - termcolor==2.3.0
       - typing-extensions==4.5.0
+      - url-normalize==1.4.3
       - urllib3==1.26.16
       - werkzeug==2.3.6
       - wrapt==1.15.0
-prefix: /usr/local/Caskroom/mambaforge/base/envs/test
+prefix: /usr/local/Caskroom/mambaforge/base/envs/stellargraph

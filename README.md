@@ -24,7 +24,7 @@ python graph_creation_train.py
 python graph_creation_test.py
 ```
 
-After grid searching for the best parameters, we set the neural network with two hidden layers of 1024 neurons each with activations "elu" and "selu" respectively. The training of the model can be seen in the `HinSAGE_mol_to_species.ipynb` notebook. Testing on unseen data is in `HinSAGE_test.ipynb` notebook
+After grid searching for the best parameters, we set the neural network with two hidden layers of 1024 neurons each with activations "elu" and "selu" respectively. The training of the model can be seen in the `HinSAGE_mol_to_species.ipynb` or `HinSAGE_species_to_mol.ipynb` notebooks. Testing on unseen data is in the `HinSAGE_test_*.ipynb` notebooks.
 
 If we want to recreate the entire LOTUS database as a graph simply run : 
 ```python
@@ -36,13 +36,12 @@ g = nx.compose(g_train, g_test)
 ## Training
 Since HinSAGE can only predict one edge type at a time, we created two models. One for predicting **unknown molecules** in **known species** and one for predicting **unknown species** in **known molecules**. 
 
-TODO
+To train the models, you can run the two Jupyter Notebooks, `HinSAGE_mol_to_species.ipynb` and `HinSAGE_species_to_mol.ipynb`. 
+
+## Testing
 ### Molecules to species
-TODO
+With known species but unknown molecules, the model has a an accuracy of 0.94 (with threshold at 0.5 or above considered as *present*). 
 ### Species to molecules
-TODO
-## Performance
-The model is split into 2 parts: One that is able to predict unknown molecules in known species and the other that should predict known molecules in unknown species. For now the model has a "true discovery rate" of 0.9 for molecules (unknown) to species (known) and the other has a "true discovery rate" of 0.78 for unknown SPECIES but known MOLECULES.
+With known molecules but unknown species, the model has an accuracy of 0.8 (same threshold). 
 
-
-## 
+ 

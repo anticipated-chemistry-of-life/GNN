@@ -4,6 +4,8 @@
 # In[1]:
 
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import networkx as nx
 import itertools
 import pandas as pd
@@ -34,47 +36,58 @@ from tensorflow.keras import mixed_precision
 
 g = nx.read_graphml("./graph/train_graph.gml")
 species_features_dummy = pd.read_csv("./data/species_features.csv.gz", index_col=0)
-#species_features_dummy = pd.read_csv("./data/species_BaseNEncoder.csv.gz", index_col=0)
-#species_features_dummy = pd.read_csv("./data/species_Multi_dim_scale.csv.gz", index_col=0)
 molecule_features_dummy = pd.read_csv("./data/molecule_features.csv.gz", index_col=0).astype("int8")
 df_agg = pd.read_csv("./data/lotus_agg_train.csv.gz", index_col=0)
-#molecule_features_dummy = pd.read_csv("./data/molecule_features_dummy.csv.gz", index_col=0).astype('int8')
 
 
 # In[3]:
+
+
+rdkit = pd.read_csv("./data/mol_dummy_rdkit.csv.gz", index_col=0).astype('int8')
+
+
+# In[4]:
+
+
+molecule_features_dummy = molecule_features_dummy.merge(rdkit,
+                                                        left_index=True,
+                                                        right_index=True)
+
+
+# In[5]:
 
 
 species_test = species_features_dummy[~species_features_dummy.index.isin(df_agg.organism_name)].index
 mol_test = molecule_features_dummy[~molecule_features_dummy.index.isin(df_agg.structure_smiles_2D)].index
 
 
-# In[4]:
+# In[6]:
 
 
 species_feat = species_features_dummy[species_features_dummy.index.isin(df_agg.organism_name)]
 molecule_feat = molecule_features_dummy[molecule_features_dummy.index.isin(df_agg.structure_smiles_2D)]
 
 
-# In[5]:
+# In[7]:
 
 
 G = StellarGraph.from_networkx(g,
-                               node_features={'species':species_feat,
+                               node_features={'species': species_feat,
                                               'molecule': molecule_feat})
 print(G.info())
 G.check_graph_for_ml()
 
 
-# In[6]:
+# In[8]:
 
 
 batch_size = 128 #default: 200
-epochs = 50 #default: 20
+epochs = 30 #default: 20
 num_samples = [3, 1]
 num_workers = multiprocessing.cpu_count()-2
 
 
-# In[7]:
+# In[9]:
 
 
 # Define an edge splitter on the original graph G:
@@ -87,7 +100,7 @@ G_test, edge_ids_test, edge_labels_test = edge_splitter_test.train_test_split(
 )
 
 
-# In[8]:
+# In[10]:
 
 
 # Define an edge splitter on the reduced graph G_test:
@@ -100,19 +113,19 @@ G_train, edge_ids_train, edge_labels_train = edge_splitter_train.train_test_spli
 )
 
 
-# In[9]:
+# In[11]:
 
 
 print(G_train.info())
 
 
-# In[10]:
+# In[12]:
 
 
 print(G_test.info())
 
 
-# In[11]:
+# In[13]:
 
 
 train_gen = HinSAGELinkGenerator(G_train,
@@ -123,7 +136,7 @@ train_gen = HinSAGELinkGenerator(G_train,
 train_flow = train_gen.flow(edge_ids_train, edge_labels_train, shuffle=True, seed=42)
 
 
-# In[12]:
+# In[14]:
 
 
 test_gen = HinSAGELinkGenerator(G_test,
@@ -134,7 +147,7 @@ test_gen = HinSAGELinkGenerator(G_test,
 test_flow = test_gen.flow(edge_ids_test, edge_labels_test, seed=42)
 
 
-# In[13]:
+# In[15]:
 
 
 hinsage_layer_sizes = [1024, 1024]
@@ -145,7 +158,7 @@ hinsage = HinSAGE(layer_sizes=hinsage_layer_sizes,
                  activations=['elu','selu'])
 
 
-# In[14]:
+# In[16]:
 
 
 # Build the model and expose input and output sockets of graphsage model
@@ -153,7 +166,7 @@ hinsage = HinSAGE(layer_sizes=hinsage_layer_sizes,
 x_inp, x_out = hinsage.in_out_tensors()
 
 
-# In[15]:
+# In[17]:
 
 
 prediction = link_classification(output_dim=1,
@@ -161,13 +174,13 @@ prediction = link_classification(output_dim=1,
                                  edge_embedding_method="l1")(x_out)
 
 
-# In[16]:
+# In[18]:
 
 
 model = keras.Model(inputs=x_inp, outputs=prediction)
 
 initial_learning_rate = 0.1
-final_learning_rate = 0.00001
+final_learning_rate = 0.001
 learning_rate_decay_factor = (final_learning_rate / initial_learning_rate)**(1/epochs)
 steps_per_epoch = int(edge_ids_train.shape[0]/batch_size)
 
@@ -187,7 +200,7 @@ model.compile(
 )
 
 
-# In[17]:
+# In[19]:
 
 
 init_train_metrics = model.evaluate(train_flow, workers=num_workers, verbose=2)
@@ -202,11 +215,11 @@ for name, val in zip(model.metrics_names, init_test_metrics):
     print("\t{}: {:0.4f}".format(name, val))
 
 
-# In[18]:
+# In[20]:
 
 
 callbacks = keras.callbacks.EarlyStopping(monitor="val_loss",
-                                          patience=10,
+                                          patience=5,
                                           mode="auto",
                                           restore_best_weights=True)
 
@@ -221,13 +234,13 @@ history = model.fit(train_flow,
                    )
 
 
-# In[19]:
+# In[21]:
 
 
 sg.utils.plot_history(history)
 
 
-# In[20]:
+# In[22]:
 
 
 train_metrics = model.evaluate(train_flow, verbose=2)
@@ -242,7 +255,7 @@ for name, val in zip(model.metrics_names, test_metrics):
     print("\t{}: {:0.4f}".format(name, val))
 
 
-# In[21]:
+# In[23]:
 
 
 def predict(model, flow, iterations=10):
@@ -253,7 +266,7 @@ def predict(model, flow, iterations=10):
     return np.mean(predictions, axis=0)
 
 
-# In[22]:
+# In[24]:
 
 
 test_pred = HinSAGELinkGenerator(G,
@@ -263,69 +276,69 @@ test_pred = HinSAGELinkGenerator(G,
                                 seed=42).flow(edge_ids_test, edge_labels_test, seed=42)
 
 
-# In[23]:
+# In[25]:
 
 
 predictions = predict(model, test_pred)
 
 
-# In[24]:
+# In[26]:
 
 
 middle = int(len(predictions)/2)
 
 
-# In[25]:
+# In[27]:
 
 
 np.mean(predictions[:middle])
 
 
-# In[26]:
+# In[28]:
 
 
 np.mean(predictions[middle:])
 
 
-# In[27]:
+# In[29]:
 
 
 test = predictions[(predictions>0.5) | (predictions<0.5)]
 test = test>0.5
 
 
-# In[28]:
+# In[30]:
 
 
 test = test.astype('int8')
 
 
-# In[29]:
+# In[31]:
 
 
 plt.hist(predictions)
 
 
-# In[30]:
+# In[32]:
 
 
 np.where((predictions>0.9) | (predictions<0.1))
 
 
-# In[31]:
+# In[33]:
 
 
 sum(test == edge_labels_test[np.where((predictions>0.5) | (predictions<0.5))])/len(test)
 
 
-# In[32]:
+# In[34]:
 
 
 len(test)/len(predictions)
 
 
-# In[33]:
+# In[35]:
 
 
-model.save(f"./model/batch_{batch_size}_layer_{hinsage_layer_sizes[0]}")
+model.save(f"./model/gbif_batch_{batch_size}_layer_{hinsage_layer_sizes[0]}_m_to_s")
 
