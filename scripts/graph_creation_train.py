@@ -8,6 +8,7 @@ import numpy as np
 from stellargraph import StellarGraph
 from rdkit.Chem import AllChem, DataStructs
 import category_encoders as ce
+from utils.molecules import smiles_to_fingerprint
 
 # Load data
 df = pd.read_csv('./data/230106_frozen_metadata.csv.gz', low_memory=False)
@@ -99,17 +100,7 @@ for i, row in df_train.iterrows():
                            "label")
 
 
-def bit_vec(mol):
-    fp = np.zeros((1,))
-    DataStructs.ConvertToNumpyArray(mol, fp)
-    return fp
-fps = [AllChem.MolFromSmiles(i) for i in unique_molecules_df['structure_smiles_2D']]
-mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=2, nBits=1024) for m in fps]
-mol_dum = [bit_vec(i) for i in mols]
-mol_dum = pd.DataFrame(mol_dum)
-
-mol_dum.index = [i for i in unique_molecules_df['structure_smiles_2D']]
-
+mol_dum = smiles_to_fingerprint(unique_molecules_df['structure_smiles_2D'])
 
 nx.write_graphml(g, "./graph/train_graph.gml")
 

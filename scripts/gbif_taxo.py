@@ -1,5 +1,6 @@
 import pandas as pd
-import pygbif
+from utils.species import get_taxonomy
+
 
 # Load data
 df = pd.read_csv('./data/230106_frozen_metadata.csv.gz', low_memory=False)
@@ -31,10 +32,6 @@ df_agg['total_papers_species'] = df_agg.groupby(
     'organism_name')['reference_wikidata'].transform('sum')
 
 #get taxonomy from GBIF
-ls = []
-for i in df_agg.organism_name.unique():
-    ls.append(pygbif.species.name_backbone(name=i))
-    
-gbif = pd.DataFrame.from_records(ls)
+gbif = get_taxonomy(df_agg.organism_name.unique(), n_cpus=4)
 gbif['organism_name'] = df_agg.organism_name.unique()
 gbif.to_csv("./data/GBIF.csv.gz", compression="gzip")

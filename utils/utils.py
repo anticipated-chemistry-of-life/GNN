@@ -15,14 +15,16 @@ from tensorflow import keras
 def load_input_data(path):
     data = pd.read_csv(path, index_col=0)
     
-    assert len(data.columns) == 2, "Input data must have 2 columns !"
+    if len(data.columns) != 2:
+        raise IndexError("Input data must have 2 columns !")
     if data.columns.isnull().any():
         raise ValueError("The input DataFrame has unnamed columns ! Columns should be named.")
     
     return data
 
 def check_which_model_to_use(G: nx.DiGraph, data: pd.DataFrame):
-    assert len(data.columns) == 2, "Input data must have 2 columns ! "
+    if len(data.columns) != 2:
+        raise IndexError("Input data must have 2 columns !")
 
     if data.columns[0] != 'molecule' and data.columns[0] != 'species':
         raise ValueError("First column must be named either : 'molecule' or 'species' !")
@@ -64,8 +66,7 @@ def _get_model(row, nodes):
         return 'both_known'
 
 def add_nodes_to_graph(G: nx.DiGraph, data: pd.DataFrame)-> nx.DiGraph :
-    '''
-    This function will add the missing node to the graph before prediction. Input should be a pandas dataframe
+    ''' This function will add the missing node to the graph before prediction. Input should be a pandas dataframe
     with one column with the species, and the other with the molecules that will be predicted. There must be a
     column name to the input data. 
     '''
@@ -100,7 +101,7 @@ def nx_to_stellargraph(g: nx.DiGraph,
                        ) -> stellargraph.core.graph.StellarDiGraph:
     
     if set(g.nodes())-set(molecule_features.index)-set(species_features.index) != set():
-        raise Exception("Number of nodes does not match number of features ! Please check your graph or your features.")
+        raise Exception("Some nodes do not have features ! Please check your graph or your features.")
         
     mol_feat = molecule_features[molecule_features.index.isin(g.nodes())]
     species_feat = species_features[species_features.index.isin(g.nodes())]
@@ -156,10 +157,10 @@ def _predict_using_both_models(model_m_to_s,
                               flow_s: stellargraph.mapper.sequences.LinkSequence) -> np.ndarray:
     
     #do prediction both ways and average them. 
-    print("Predict both : running 'forward' predictions")
+    print("Predict both : running molecule to species predictions...")
     a = _predict(model_m_to_s, flow_m)
     
-    print("Predict both : running backward prediction...")
+    print("Predict both : running species to molecules prediction...")
     b = _predict(model_s_to_m, flow_s)
     
     assert len(a)==len(b), f"Forward is of length {len(a)} and backward is of length {len(b)}. They should be the same."
