@@ -104,7 +104,7 @@ def smiles_to_classyfire(compounds: Iterable, n_cpus=4)-> pd.DataFrame:
         ls = pool.map(_smiles_to_classyfire, compounds)
     return pd.concat(ls)
 
-def is_inchikey(string):
+def is_inchikey(string: str) -> bool:
     """
     Checks if a string is a valid InChIKey.
     
@@ -154,14 +154,14 @@ def _to_bit_vec(mol) -> np.ndarray:
 #    mol = AllChem.GetMorganFingerprintAsBitVect(fps, radius=radius, nBits=nBits)
 #    return _to_bit_vec(mol)
 
-def smiles_to_fingerprint(smiles: list, radius=2, nBits=1024) -> pd.DataFrame:
+def smiles_to_fingerprint(smiles: Iterable, radius=2, nBits=1024) -> pd.DataFrame:
     '''
     Converts SMILES to molecular fingerprint 
     '''
     fps = [AllChem.MolFromSmiles(i) for i in smiles]
     mols  = [AllChem.GetMorganFingerprintAsBitVect(m, radius=radius, nBits=nBits) for m in fps]
     mol_dum = [_to_bit_vec(i) for i in mols]
-    mol_dum = pd.DataFrame.from_records(mol_dum)
+    mol_dum = pd.DataFrame.from_records(mol_dum).astype('uint8')
     mol_dum.index = [i for i in smiles]
     
     return mol_dum

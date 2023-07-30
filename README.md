@@ -5,6 +5,7 @@ If the user wants to reproduce this, it should first download the latest version
 
 ```bash
 wget https://zenodo.org/record/7534071/files/230106_frozen_metadata.csv.gz
+mv 230106_frozen_metadata.csv.gz ./data/
 ```
 
 The algorithm implements a link classification task in a graph between nodes `species` and nodes `molecule`. We use HinSAGE with mean aggregator from [StellarGraph](https://stellargraph.readthedocs.io/en/stable/index.html) library.

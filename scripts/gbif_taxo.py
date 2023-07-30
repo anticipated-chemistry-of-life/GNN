@@ -33,5 +33,4 @@ df_agg['total_papers_species'] = df_agg.groupby(
 
 #get taxonomy from GBIF
 gbif = get_taxonomy(df_agg.organism_name.unique(), n_cpus=4)
-gbif['organism_name'] = df_agg.organism_name.unique()
 gbif.to_csv("./data/GBIF.csv.gz", compression="gzip")

@@ -47,4 +47,5 @@ def get_taxonomy(species: Iterable, n_cpus=4) -> pd.DataFrame:
 
     df = pd.DataFrame.from_records(ls)
     df['organism_name'] = species
-    return df[['kingdom','phylum','class','order','family','genus', 'canonicalName', 'organism_name']].copy()
+    df.index = species
+    return df[['kingdom','phylum','class','order','family','genus', 'organism_name']].copy()

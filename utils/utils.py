@@ -1,7 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import networkx as nx
-import itertools
 import pandas as pd
 import numpy as np
 from stellargraph import StellarGraph
@@ -11,6 +10,9 @@ import category_encoders as ce
 import stellargraph
 from stellargraph.mapper import HinSAGELinkGenerator
 from tensorflow import keras
+from utils.molecules import inchikey_to_smiles, smiles_to_classyfire, smiles_to_fingerprint
+from utils.species import get_taxonomy
+from utils.encoding import binary_encode_df
 
 def load_input_data(path):
     data = pd.read_csv(path, index_col=0)
@@ -26,11 +28,11 @@ def check_which_model_to_use(G: nx.DiGraph, data: pd.DataFrame):
     if len(data.columns) != 2:
         raise IndexError("Input data must have 2 columns !")
 
-    if data.columns[0] != 'molecule' and data.columns[0] != 'species':
+    valid_names = ['molecule', 'species']
+    if data.columns[0] not in valid_names:
         raise ValueError("First column must be named either : 'molecule' or 'species' !")
-
-    if data.columns[1] != 'molecule' and data.columns[1] != 'species':
-        raise ValueError("Second column must be named either : 'molecule' or 'species' ! ")
+    if data.columns[1] not in valid_names:
+        raise ValueError("Second column must be named either : 'molecule' or 'species' !")
 
     # Get set of nodes in the graph for fast lookup
     nodes = set(G.nodes())
@@ -71,15 +73,17 @@ def add_nodes_to_graph(G: nx.DiGraph, data: pd.DataFrame)-> nx.DiGraph :
     column name to the input data. 
     '''
     G_copy = G.copy()
-    assert len(data.columns) == 3, "Input data must have 3 columns ! Mol, Species, and Model. Something went wrong in the previous steps"
+    if len(data.columns) != 3:
+        raise IndexError("Input data must have 3 columns ! Mol, Species, and Model. Something went wrong in the previous steps")
+    
     if data.columns.isnull().any():
         raise ValueError("The input DataFrame has unnamed columns ! Columns should be named.")
     
-    if data.columns[0] != 'molecule' and data.columns[0] != 'species':
+    valid_names = ['molecule', 'species']
+    if data.columns[0] not in valid_names:
         raise ValueError("First column must be named either : 'molecule' or 'species' !")
-        
-    if data.columns[1] != 'molecule' and data.columns[1] != 'species':
-        raise ValueError("Second column must be named either : 'molecule' or 'species' ! ")
+    if data.columns[1] not in valid_names:
+        raise ValueError("Second column must be named either : 'molecule' or 'species' !")
     
     first_column_set = set(data.iloc[:, 0])
     second_column_set = set(data.iloc[:, 1])
@@ -96,11 +100,12 @@ def add_nodes_to_graph(G: nx.DiGraph, data: pd.DataFrame)-> nx.DiGraph :
 
 
 def nx_to_stellargraph(g: nx.DiGraph,
-                       molecule_features: pd.core.frame.DataFrame,
-                       species_features: pd.core.frame.DataFrame
+                       molecule_features: pd.DataFrame,
+                       species_features: pd.DataFrame
                        ) -> stellargraph.core.graph.StellarDiGraph:
     
     if set(g.nodes())-set(molecule_features.index)-set(species_features.index) != set():
+        print(set(g.nodes())-set(molecule_features.index)-set(species_features.index))
         raise Exception("Some nodes do not have features ! Please check your graph or your features.")
         
     mol_feat = molecule_features[molecule_features.index.isin(g.nodes())]
@@ -122,7 +127,6 @@ def create_flow(graph: stellargraph.core.graph.StellarDiGraph,
                 array: np.ndarray,
                 unknown_node = 'molecule'
                 ):
-    batch_size = []
     #if the first column is the one we want to predict, keep head node types as they are. 
     if data.columns[0] == unknown_node:
         flow = HinSAGELinkGenerator(
@@ -163,22 +167,114 @@ def _predict_using_both_models(model_m_to_s,
     print("Predict both : running species to molecules prediction...")
     b = _predict(model_s_to_m, flow_s)
     
-    assert len(a)==len(b), f"Forward is of length {len(a)} and backward is of length {len(b)}. They should be the same."
+    if len(a)!=len(b):
+        raise IndexError(f"Forward is of length {len(a)} and backward is of length {len(b)}. They should be the same.")
     
     return (a+b)/2
 
+def convert_to_smiles(data: pd.DataFrame, n_cpus=4):
+    valid_names = ['molecule', 'species']
+    if data.columns[0] not in valid_names:
+        raise ValueError("First column must be named either : 'molecule' or 'species' !")
+    if data.columns[1] not in valid_names:
+        raise ValueError("Second column must be named either : 'molecule' or 'species' !")
+
+    df = data.copy()
+
+    # Get unique values and convert them to SMILES
+    unique_molecules = df['molecule'].unique()
+    unique_smiles = inchikey_to_smiles(unique_molecules, n_cpus=n_cpus)
+
+    # Create a dictionary mapping molecules to SMILES
+    molecule_to_smiles = dict(zip(unique_molecules, unique_smiles))
+
+    # Map the dictionary onto the 'molecule' column in the dataframe
+    df['molecule'] = df['molecule'].map(molecule_to_smiles)
+    
+    return df
+
+def get_missing_features(data: pd.DataFrame, graph: nx.DiGraph, n_cpus=4):
+    mols = []
+    for m in data['molecule'].unique():
+        if m not in graph:
+            mols.append(m)
+    
+    sp = []
+    for s in data['species'].unique():
+        if s not in graph:
+            sp.append(s)
+    
+    if len(mols) != 0:
+        mols_classyfire = smiles_to_classyfire(mols, n_cpus=n_cpus)
+        mols_rdkit = smiles_to_fingerprint(mols)
+        mols_rdkit.columns = mols_rdkit.columns.astype(str)
+    if len(sp) != 0:
+        sp_taxo = get_taxonomy(sp, n_cpus=n_cpus)
+    
+    #return conditions
+    if len(mols) != 0 and len(sp) != 0:
+        return mols_classyfire, mols_rdkit, sp_taxo
+    elif len(mols) != 0 and len(sp) == 0:
+        return mols_classyfire, mols_rdkit, None
+    elif len(mols) == 0 and len(sp) != 0:
+        return None, None, sp_taxo
+    else:
+        return None, None, None
 
 def predict(graph : nx.DiGraph,
             model_m_to_s,
             model_s_to_m,
             data: pd.DataFrame,
-            molecule_features: pd.DataFrame,
-            species_features: pd.DataFrame
-            ):
+            molecule_classyfire: pd.DataFrame,
+            molecule_fingerprint: pd.DataFrame,
+            species_taxo: pd.DataFrame,
+            n_cpus=4) -> pd.DataFrame:
+    
+    #convert molecules that are inchikeys to smiles
+    print("Converting Inchikeys to SMILES...")
+    data_convert = convert_to_smiles(data=data, n_cpus=n_cpus)
+    
+    #get missing features
+    print("Getting missing features...")
+    missing_mols_classyfire, missing_mols_fingerprint, missing_sp_taxo = get_missing_features(data_convert,graph, n_cpus=n_cpus)
+    
+    #Convert to species binary encoder
+    print("Converting species taxonomy as numeric...")
+    if missing_sp_taxo is not None:
+        sp_feat = pd.concat([species_taxo, missing_sp_taxo])
+        species_features = binary_encode_df(sp_feat)
+        del sp_feat
+    else:
+        sp_feat = species_taxo
+        species_features = binary_encode_df(sp_feat)
+        del sp_feat
+
+    if len(species_features.columns) != 69:
+        raise NotImplementedError(f"The model has been trained on 69 features for species, with your species there are now {len(species_features.columns)} features. This is not supported. Please give less species as input.")
+    
+    #Convert molecules as numeric
+    print("Converting molecules as numeric...")
+    if missing_mols_classyfire is not None:
+        mols_feat = pd.concat([molecule_classyfire, missing_mols_classyfire])
+        mols_feat = binary_encode_df(mols_feat)
+        mols_feat_fingerprint = pd.concat([molecule_fingerprint, missing_mols_fingerprint])
+    else:
+        mols_feat = molecule_classyfire
+        mols_feat = binary_encode_df(mols_feat)
+        mols_feat_fingerprint = molecule_fingerprint
+        
+    molecule_features = mols_feat.merge(mols_feat_fingerprint,
+                                        left_index=True,
+                                        right_index=True)
+    
+    del mols_feat, mols_feat_fingerprint
+    if len(molecule_features.columns) != 1051:
+        raise NotImplementedError(f"The model has been trained on 1051 features for molecules, with your molecules there are now {len(molecule_features.columns)} features. This is not supported. Please give less molecules as input.")
+    
     
     #first check which model should be used for each row
     print("Checking which model should be used for each row...")
-    data_out, m_to_s, s_to_m, both_unknown, both_known = check_which_model_to_use(graph, data)
+    data_out, m_to_s, s_to_m, both_unknown, both_known = check_which_model_to_use(graph, data_convert)
     
     #the add the missing nodes to the graph
     print("Adding missing nodes to the graph...")
@@ -199,7 +295,7 @@ def predict(graph : nx.DiGraph,
     #create the different flows according to what we want to do
     if m_to_s.size != 0 :
         print("Creating mol to species flow...")
-        flow_m = create_flow(graph_stellar, data, m_to_s, 'molecule')
+        flow_m = create_flow(graph_stellar, data_convert, m_to_s, 'molecule')
         
         print("Predicting mol to species...")
         out_m = _predict(model_m_to_s, flow_m)
@@ -207,7 +303,7 @@ def predict(graph : nx.DiGraph,
         
     if s_to_m.size != 0:
         print("Creating species to mol flow...")
-        flow_s = create_flow(graph_stellar, data, s_to_m, 'species')
+        flow_s = create_flow(graph_stellar, data_convert, s_to_m, 'species')
         
         print("Predicting species to mol...")
         out_s = _predict(model_s_to_m, flow_s)
@@ -215,21 +311,21 @@ def predict(graph : nx.DiGraph,
 
     if both_unknown.size != 0:
         print("Creating 'forward', 'backward' flow for UNKNOWN molecule AND species...")
-        flow_m_both_unknown = create_flow(graph_stellar, data, both_unknown, 'molecule')
-        flow_s_both_unknown = create_flow(graph_stellar, data, both_unknown, 'species')
+        flow_m_both_unknown = create_flow(graph_stellar, data_convert, both_unknown, 'molecule')
+        flow_s_both_unknown = create_flow(graph_stellar, data_convert, both_unknown, 'species')
         out_both_unknown = _predict_using_both_models(model_m_to_s, model_s_to_m, flow_m_both_unknown, flow_s_both_unknown)
         del flow_m_both_unknown
         del flow_s_both_unknown
         
     if both_known.size != 0:
         print("Creating 'forward', 'backward' flow for KNOWN molecule AND species...")
-        flow_m_both_known = create_flow(graph_stellar, data, both_known, 'molecule')
-        flow_s_both_known = create_flow(graph_stellar, data, both_known, 'species')
+        flow_m_both_known = create_flow(graph_stellar, data_convert, both_known, 'molecule')
+        flow_s_both_known = create_flow(graph_stellar, data_convert, both_known, 'species')
         out_both_known = _predict_using_both_models(model_m_to_s, model_s_to_m, flow_m_both_known, flow_s_both_known)
         del flow_m_both_known
         del flow_s_both_known
     
-    if data.columns[0] == 'molecule':
+    if data_convert.columns[0] == 'molecule':
         out_df = pd.DataFrame(np.vstack((m_to_s, s_to_m, both_unknown, both_known)),
                               columns=['molecule', 'species'])
     else:
