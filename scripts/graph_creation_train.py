@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import networkx as nx
-import itertools
 import pandas as pd
 import numpy as np
-from stellargraph import StellarGraph
-from rdkit.Chem import AllChem, DataStructs
-import category_encoders as ce
+import sys
+import os
+
+# Add the parent directory to Python's module path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils.molecules import smiles_to_fingerprint
 
 # Load data
@@ -53,30 +51,32 @@ unique_species_df = df_agg.drop_duplicates(subset=['organism_name'])
 unique_molecules_df = df_agg.drop_duplicates(subset=['structure_smiles_2D'])
 
 # Fetch the corresponding features
-species_features_df = unique_species_df[['kingdom',
+species_features = unique_species_df[['kingdom',
                                          'phylum',
                                          'class',
                                          'order',
                                          'family',
                                          'genus',
                                          'organism_name']]
+species_features.index = [i for i in unique_species_df['organism_name']]
 
-molecule_features_df = unique_molecules_df[['structure_taxonomy_classyfire_01kingdom',
+molecule_features = unique_molecules_df[['structure_taxonomy_classyfire_01kingdom',
                                             'structure_taxonomy_classyfire_02superclass',
                                             'structure_taxonomy_classyfire_03class',
                                             'structure_taxonomy_classyfire_04directparent']]
+molecule_features.index = [i for i in unique_molecules_df['structure_smiles_2D']] 
 
 
 # create features for species
-encoder_species = ce.BinaryEncoder(cols=[col for col in species_features_df.columns])
-species_features_dummy = encoder_species.fit_transform(species_features_df)
-
-
-encoder_molecule = ce.BinaryEncoder(cols=[col for col in molecule_features_df.columns])
-molecule_features_dummy = encoder_molecule.fit_transform(molecule_features_df)
-
-species_features_dummy.index = [i for i in unique_species_df['organism_name']]
-molecule_features_dummy.index = [i for i in unique_molecules_df['structure_smiles_2D']]
+#encoder_species = ce.BinaryEncoder(cols=[col for col in species_features_df.columns])
+#species_features_dummy = encoder_species.fit_transform(species_features_df)
+#
+#
+#encoder_molecule = ce.BinaryEncoder(cols=[col for col in molecule_features_df.columns])
+#molecule_features_dummy = encoder_molecule.fit_transform(molecule_features_df)
+#
+#species_features_dummy.index = [i for i in unique_species_df['organism_name']]
+#molecule_features_dummy.index = [i for i in unique_molecules_df['structure_smiles_2D']]
 
 sample_fraction = 0.3  # 30% for example
 df_test = df_agg.sample(frac=sample_fraction, random_state=42)
@@ -104,7 +104,7 @@ mol_dum = smiles_to_fingerprint(unique_molecules_df['structure_smiles_2D'])
 
 nx.write_graphml(g, "./graph/train_graph.gml")
 
-molecule_features_dummy.to_csv("./data/molecule_features.csv.gz", compression="gzip")
-species_features_dummy.to_csv("./data/species_features.csv.gz", compression="gzip")
+molecule_features.to_csv("./data/molecule_features.csv.gz", compression="gzip")
+species_features.to_csv("./data/species_features.csv.gz", compression="gzip")
 df_train.to_csv("./data/lotus_agg_train.csv.gz", compression="gzip")
 mol_dum.to_csv("./data/mol_dummy_rdkit.csv.gz", compression="gzip")

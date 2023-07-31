@@ -154,7 +154,7 @@ def _to_bit_vec(mol) -> np.ndarray:
 #    mol = AllChem.GetMorganFingerprintAsBitVect(fps, radius=radius, nBits=nBits)
 #    return _to_bit_vec(mol)
 
-def smiles_to_fingerprint(smiles: Iterable, radius=2, nBits=1024) -> pd.DataFrame:
+def smiles_to_fingerprint(smiles: Iterable, radius=2, nBits=128) -> pd.DataFrame:
     '''
     Converts SMILES to molecular fingerprint 
     '''

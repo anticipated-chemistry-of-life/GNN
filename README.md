@@ -20,7 +20,7 @@ conda activate stellargraph
 We will first parse the LOTUS database and get the taxonomy from GBIF for each species. This will be the species features.
 Then we create a graph of LOTUS and split them into training and testing dataset (for now 70-30 split):
 ```bash
-python gbif_taxo.py
+python ./scripts/gbif_taxo.py
 python ./scripts/graph_creation_train.py
 python ./scripts/graph_creation_test.py
 ```
@@ -43,8 +43,8 @@ To train the models, you can run the two Jupyter Notebooks, `HinSAGE_mol_to_spec
 Currently the model is overfitting a little bit, we might need to switch back to have only the [Classyfire](http://classyfire.wishartlab.com/) as features. 
 ## Testing
 ### Molecules to species
-With known species but unknown molecules, the model has a an accuracy of 0.94 (with threshold at 0.5 or above considered as *present*). 
+With known species but unknown molecules, the model has a an accuracy of 0.92 (with threshold at 0.5 or above considered as *present*). 
 ### Species to molecules
-With known molecules but unknown species, the model has an accuracy of 0.8 (same threshold). 
+With known molecules but unknown species, the model has an accuracy of 0.82 (same threshold). 
 
  

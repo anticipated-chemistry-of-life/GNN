@@ -268,8 +268,8 @@ def predict(graph : nx.DiGraph,
                                         right_index=True)
     
     del mols_feat, mols_feat_fingerprint
-    if len(molecule_features.columns) != 1051:
-        raise NotImplementedError(f"The model has been trained on 1051 features for molecules, with your molecules there are now {len(molecule_features.columns)} features. This is not supported. Please give less molecules as input.")
+    if len(molecule_features.columns) != 155:
+        raise NotImplementedError(f"The model has been trained on 155 features for molecules, with your molecules there are now {len(molecule_features.columns)} features. This is not supported. Please give less molecules as input.")
     
     
     #first check which model should be used for each row
