@@ -122,7 +122,7 @@ def is_inchikey(string: str) -> bool:
 
 def _inchikey_to_smiles(inchikey: str) -> str:
     '''Input must be either InchiKey or a SMILES.
-    If multiple compounds return from the query (which normally should not be the case), it will take the first one
+    If multiple compounds return from the query (which normally should not be the case), it will take the first one.
     '''
     if not is_inchikey(inchikey):
         return inchikey

@@ -85,16 +85,16 @@ def add_nodes_to_graph(G: nx.DiGraph, data: pd.DataFrame)-> nx.DiGraph :
     if data.columns[1] not in valid_names:
         raise ValueError("Second column must be named either : 'molecule' or 'species' !")
     
-    first_column_set = set(data.iloc[:, 0])
-    second_column_set = set(data.iloc[:, 1])
+    first_column_set = set(data['molecule'])
+    second_column_set = set(data['species'])
     
     for name in first_column_set:
         if name not in G_copy:
-            G_copy.add_node(name, label=data.columns[0])
+            G_copy.add_node(name, label='molecule')
             
     for name in second_column_set:
         if name not in G_copy:
-            G_copy.add_node(name, label=data.columns[1])
+            G_copy.add_node(name, label='species')
     
     return G_copy
 
