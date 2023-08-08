@@ -39,6 +39,7 @@ Since HinSAGE can only predict one edge type at a time, we created two models. O
 
 To train the models, you can run the two Jupyter Notebooks, `HinSAGE_mol_to_species.ipynb` and `HinSAGE_species_to_mol.ipynb`. 
 
+Please note that for now the model works best for molecules and species already present in the graph.
 ### Molecules to species
 Currently the model is overfitting a little bit, we might need to switch back to have only the [Classyfire](http://classyfire.wishartlab.com/) as features. 
 ## Testing
