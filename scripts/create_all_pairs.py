@@ -8,9 +8,9 @@ mol = df.structure_smiles_2D.unique()[:1000]
 species = df.organism_name.unique()[:1000]
 
 comb = itertools.product(species, mol)
-with open('./data/all_pairs.csv', 'w', newline='') as file:
+with open("./data/all_pairs.csv", "w", newline="") as file:
     writer = csv.writer(file)
-    writer.writerow(['species', 'molecule'])
+    writer.writerow(["species", "molecule"])
     for s, m in comb:
         writer = csv.writer(file)
         writer.writerow([s, m])
