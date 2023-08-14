@@ -155,7 +155,7 @@ def _inchikey_to_smiles(inchikey: str) -> str:
     return list_compound[0].canonical_smiles
 
 
-def inchikey_to_smiles(inchikeys: Iterable, n_cpus=4) -> list:
+def inchikey_to_smiles(inchikeys: Iterable[str], n_cpus=4) -> list:
     """Takes a list of inchikeys and returns the SMILES, in parallel"""
     with Pool(processes=n_cpus) as pool:
         ls = pool.map(_inchikey_to_smiles, inchikeys)

@@ -41,7 +41,7 @@ def _get_species_data(i: str) -> dict:
             return sp
 
 
-def get_taxonomy(species: Iterable, n_cpus=4) -> pd.DataFrame:
+def get_taxonomy(species: Iterable[str], n_cpus=4) -> pd.DataFrame:
     """This function will query pygbif for the information about the species.
 
     NOTE : If it doesn't find a match but finds some alternatives, it will take the first possible alternative
