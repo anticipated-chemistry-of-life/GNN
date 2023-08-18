@@ -5,12 +5,8 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 from stellargraph import StellarGraph
-from tensorflow import keras
-import tensorflow as tf
-import category_encoders as ce
 import stellargraph
 from stellargraph.mapper import HinSAGELinkGenerator
-from tensorflow import keras
 from utils.molecules import (
     inchikey_to_smiles,
     smiles_to_classyfire,
