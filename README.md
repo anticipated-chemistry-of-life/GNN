@@ -48,4 +48,4 @@ With known species but unknown molecules, the model has a an accuracy of 0.92 (w
 ### Species to molecules
 With known molecules but unknown species, the model has an accuracy of 0.82 (same threshold). 
 
- 
+For more details and explanations, please see [here](https://github.com/commons-research/common_dws_public_storage/tree/main/docs/anticipated_lotus/thesis).
