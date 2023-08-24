@@ -187,7 +187,7 @@ def create_flow(
     return flow
 
 
-def _predict(model, flow, iterations=7):
+def _predict(model, flow, iterations=5):
     predictions = []
     for _ in range(iterations):
         predictions.append(model.predict(flow, workers=-1).flatten())
