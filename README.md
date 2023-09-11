@@ -10,7 +10,7 @@ mv 230106_frozen_metadata.csv.gz ./data/
 
 The algorithm implements a link classification task in a graph between nodes `species` and nodes `molecule`. We use HinSAGE with mean aggregator from [StellarGraph](https://stellargraph.readthedocs.io/en/stable/index.html) library.
 
-## Playing around
+## Graph creation
 To reproduce the model, the user should first : 
 
 ```bash
@@ -49,3 +49,7 @@ With known species but unknown molecules, the model has a an accuracy of 0.92 (w
 With known molecules but unknown species, the model has an accuracy of 0.82 (same threshold). 
 
 For more details and explanations, please see [here](https://github.com/commons-research/common_dws_public_storage/tree/main/docs/anticipated_lotus/thesis).
+
+## Anticipate LOTUS
+ * To do some predictions, have a look at `test_pipeline.ipynb`. 
+ * :warning: The user can also decided to create all possible pairs in the LOTUS database. To do so, run `./scripts/create_all_pairs.py` and `./scripts/chunk_file.py`. ATTENTION this should be run on a cluster since the file size created are in the hundreds of gigas. :warning:
