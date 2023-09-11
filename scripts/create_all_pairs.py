@@ -7,6 +7,16 @@ import subprocess
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+response = input(
+    "This script will create a massive file ! Make sure you have enough space on your computer (min 600G free) !\n\
+Ideally run this on a cluster !\n\
+Do you want to continue? (yes/no):"
+)
+
+if response.lower() != "yes":
+    print("Aborting script execution.")
+    sys.exit(0)  # Exit the script
+
 train = pd.read_csv("./data/lotus_agg_train.csv.gz")
 test = pd.read_csv("./data/lotus_agg_test.csv.gz")
 df = pd.concat([train, test])
